@@ -3,23 +3,118 @@ import string
 
 
 def findUnit(clauses, symbols):
-    for c in clauses:
-        if c in symbols:
-            continue
-        if not isinstance(c, list):
-            return (c, True)
-        elif c[0] == 'not':
-            return (c[1], False)
-    return (-1, False)
-
-
-def findPure(clauses):
-    for c in clauses:
+    for clause in clauses:
+        if not isinstance(clause, list) and clause in symbols:
+            return (clause, True)
+        # Consider the not variable
+        elif isinstance(clause, list) and clause[0] == 'not' and clause[1] in symbols:
+            return (clause, False)
+    return ('', False)
         
+
+def findPure(clauses, symbols):
+    # Use two list to record the appearance of a variable and its negative one
+    sym_list = list()
+    not_sym_list = list()
+    for clause in clauses:
+        # Check the ['not', 'X'] and ['or', 'x', ...]
+        if isinstance(clause, list):
+            # If it is ['not', 'X']
+            if clause[0] == 'not' and clause[1] in symbols and clause[1] not in not_sym_list:
+                not_sym_list.append(clause[1])
+            # If it is ['or', 'x', ...]
+            elif clause[0] == 'or':
+                for part in clause:
+                    if part != clause[0]:
+                        # If it is ['not', 'X']
+                        if isinstance(part, list) and part[0] == 'not':
+                            if part[1] in symbols and part[1] not in not_sym_list:
+                                not_sym_list.append(part[1])
+                        # If it is 'X'
+                        elif len(part) == 1:
+                            if part in symbols and part not in sym_list:
+                                sym_list.append(part)
+        # Check 'X', though it is checked in findUnit, we add it here for completeness.
+        else:
+            if clause not in sym_list:
+                sym_list.append(clause)
+    # Find the symbol which only appear in sym_list or not_sym_list
+    # Check sym_list first.
+    for sym in sym_list:
+        isUnique = True
+        for nsym in not_sym_list:
+            if nsym == sym:
+                isUnique = False
+                break
+        if isUnique:
+            return (sym, True)
+    #Check the not_sym_list.
+    for nsym in not_sym_list:
+        isUnique = True
+        for sym in sym_list:
+            if sym == nsym:
+                isUnique = False
+                break
+        if isUnique:
+            return (sym, False)
+    # If can't find a pure symbol, then return ('', false)
+    return ('', False)
+                
+
+def checkSatisfied(clauses, assignment):
+    satisfied = True
+    for clause in clauses:
+        # If clause is a var like 'A'
+        if not isinstance(clause, list):
+            satisfied = assignment[clause] and satisfied
+        # If it is the ['not', 'X'] and ['or', 'x', ...]
+        else:
+            # ['not', 'X']
+            if clause[0] == 'not':
+                satisfied = (not assignment[clause[0]]) and satisfied
+            # ['or', 'x', ...]
+            else:
+                orResult = False
+                for part in clause:
+                    if part != clause[0]:
+                        # if it is var like 'A':
+                        if not isinstance(part, list):
+                            orResult = assignment[part] or orResult
+                        # if it is ['not', 'x']
+                        else:
+                            orResult = (not assignment[part[1]]) or orResult
+        if satisfied == False:
+            return False
+    return True
 
 
 def DPLL(clauses, symbols, assignment):
-    pass
+    if len(assignment) == len(symbols):
+        if checkSatisfied(clauses, assignment):
+            return (True, assignment)
+        else:
+            return (False, assignment)
+    else:
+        pureSymbol = findPure(clauses, symbols)
+        if pureSymbol[0] != '':
+            symbols.remove(pureSymbol[0])
+            assignment[pureSymbol[0]] = pureSymbol[1]
+            return DPLL(clauses, symbols, assignment)
+        unitSymbol = findUnit(clauses, symbols)
+        if unitSymbol[0] != '':
+            symbols.remove[unitSymbol[0]]
+            assignment[unitSymbol[0]] = unitSymbol[1]
+            return DPLL(clauses, symbols, assignment)
+        first_symbol = symbols[0]
+        symbols.remove(first_symbol)
+        assignment[first_symbol] = True
+        result = DPLL(clauses, symbols, assignment)
+        if result[0] == True:
+            return result
+        else:
+            assignment[first_symbol] = False
+            result = DPLL(clauses, symbols, assignment)
+            return result
 
 def getClauses(sentence):
     clauses = list()
@@ -57,6 +152,8 @@ if __name__ == '__main__':
         print 'original:         {s}.'.format(s=sentence)
         symbols = getSymbols(sentence)
         clauses = getClauses(sentence)
+        print 'symbols:          {s}.'.format(s=symbols)
+        print 'clauses:          {s}.'.format(s=clauses)
         assignment = {}
-        DPLL(clauses, symbols, assignment)
+        #DPLL(clauses, symbols, assignment)
         sentencesNum -= 1
