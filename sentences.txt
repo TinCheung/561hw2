@@ -1,0 +1,11 @@
+10
+["not", ["implies", ["implies", ["or", "P", ["not", "Q"]], "R"], ["and", "P", "R"]]]
+["or", ["and", "A", "B"], ["and", "C", "D"]]
+["implies", ["and", ["not", "R"], "B"], "W"]
+["or", ["not", ["implies", "P", "Q"]], ["implies", "R", "P"]]
+["not", ["not", ["not", ["not", ["not", "P"]]]]]
+["iff", "S", ["and", "Q", "R"]]
+["and", ["or", "P", "Q", "R"], ["not", "S"]]
+["or", ["and", "A", "B"], ["and", "C", "D"]]
+["implies", ["and", ["not", "R"], "B"], "W"]
+["iff", "S", ["and", "Q", "R"]]
