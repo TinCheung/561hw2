@@ -1,7 +1,8 @@
-5
+7
+["not", "P"]
+["and", ["or", ["not", "P"], "Q"], ["or", ["not", "Q"], ["not", "P"]], ["or", "P", ["not", "Q"]]]
+["and", ["or", "P", "Q"], ["or", ["not", "P"], "R"], ["or", ["not", "R"], ["not", "P"]], ["or", ["not", "Q"], "S", ["not", "T"]], "T"]
 ["and", "A", ["or", "B", "C"], ["or", "B", "D"]]
 ["or", "R", ["not", "B"], "W"]
 ["and", ["or", "P", ["not", "R"]], ["or", ["not", "Q"], ["not", "R"], "P"]]
-["not", "P"]
 ["and", "A", ["not", "A"]]
-

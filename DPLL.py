@@ -1,5 +1,6 @@
 __author__ = 'TianXiang Tan'
 import string
+from copy import deepcopy
 
 
 def findUnit(clauses, symbols):
@@ -59,31 +60,50 @@ def findPure(clauses, symbols):
             return (nsym, False)
     # If can't find a pure symbol, then return ('', false)
     return ('', False)
-                
+
+
+def evaluateClause(clause, assignment):
+    satisfied = False
+    # If clause is a var like 'A'
+    if not isinstance(clause, list) and clause in assignment.keys():
+        satisfied = assignment[clause] and True
+    # If it is the ['not', 'X'] and ['or', 'x', ...]
+    else:
+        # ['not', 'X']
+        if clause[0] == 'not' and clause[1] in assignment.keys():
+            satisfied = (not assignment[clause[1]]) and True
+        # ['or', 'x', ...]
+        else:
+            orResult = False
+            for part in clause:
+                if part != clause[0]:
+                    # if it is var like 'A':
+                    if not isinstance(part, list) and part in assignment.keys():
+                        orResult = assignment[part] or orResult
+                    # if it is ['not', 'x']
+                    elif isinstance(part, list) and part[1] in assignment.keys():
+                        orResult = (not assignment[part[1]]) or orResult
+            satisfied = True and orResult
+    return satisfied
+
+
+def removeTrueClauses(clauses, assignment):
+    result = deepcopy(clauses)
+    isDeleted = True
+    while isDeleted:
+        isDeleted = False
+        for clause in result:
+            if evaluateClause(clause, assignment):
+                result.remove(clause)
+                isDeleted = True
+    return result
+
 
 def checkSatisfied(clauses, assignment):
     satisfied = True
     for clause in clauses:
-        # If clause is a var like 'A'
-        if not isinstance(clause, list):
-            satisfied = assignment[clause] and satisfied
-        # If it is the ['not', 'X'] and ['or', 'x', ...]
-        else:
-            # ['not', 'X']
-            if clause[0] == 'not':
-                satisfied = (not assignment[clause[1]]) and satisfied
-            # ['or', 'x', ...]
-            else:
-                orResult = False
-                for part in clause:
-                    if part != clause[0]:
-                        # if it is var like 'A':
-                        if not isinstance(part, list):
-                            orResult = assignment[part] or orResult
-                        # if it is ['not', 'x']
-                        else:
-                            orResult = (not assignment[part[1]]) or orResult
-        if satisfied == False:
+        satisfied = satisfied and evaluateClause(clause, assignment)
+        if not satisfied:
             return False
     return True
 
@@ -99,21 +119,21 @@ def DPLL(clauses, symbols, assignment):
         if pureSymbol[0] != '':
             symbols.remove(pureSymbol[0])
             assignment[pureSymbol[0]] = pureSymbol[1]
-            return DPLL(clauses, symbols, assignment)
+            return DPLL(removeTrueClauses(clauses, assignment), symbols, assignment)
         unitSymbol = findUnit(clauses, symbols)
         if unitSymbol[0] != '':
             symbols.remove(unitSymbol[0])
             assignment[unitSymbol[0]] = unitSymbol[1]
-            return DPLL(clauses, symbols, assignment)
+            return DPLL(removeTrueClauses(clauses, assignment), symbols, assignment)
         first_symbol = symbols[0]
         symbols.remove(first_symbol)
         assignment[first_symbol] = True
-        result = DPLL(clauses, symbols, assignment)
+        result = DPLL(removeTrueClauses(clauses, assignment), symbols, assignment)
         if result[0] == True:
             return result
         else:
             assignment[first_symbol] = False
-            result = DPLL(clauses, symbols, assignment)
+            result = DPLL(removeTrueClauses(clauses, assignment), symbols, assignment)
             return result
 
 def getClauses(sentence):
@@ -168,4 +188,5 @@ if __name__ == '__main__':
         assignment = {}
         result = DPLL(clauses, symbols, assignment)
         printResult(result)
+        print ""
         sentencesNum -= 1
