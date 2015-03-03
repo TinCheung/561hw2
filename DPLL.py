@@ -10,7 +10,7 @@ def findUnit(clauses, symbols):
         elif isinstance(clause, list) and clause[0] == 'not' and clause[1] in symbols:
             return (clause, False)
     return ('', False)
-        
+
 
 def findPure(clauses, symbols):
     # Use two list to record the appearance of a variable and its negative one
@@ -36,7 +36,7 @@ def findPure(clauses, symbols):
                                 sym_list.append(part)
         # Check 'X', though it is checked in findUnit, we add it here for completeness.
         else:
-            if clause not in sym_list:
+            if clause not in sym_list and clause in symbols:
                 sym_list.append(clause)
     # Find the symbol which only appear in sym_list or not_sym_list
     # Check sym_list first.
@@ -56,7 +56,7 @@ def findPure(clauses, symbols):
                 isUnique = False
                 break
         if isUnique:
-            return (sym, False)
+            return (nsym, False)
     # If can't find a pure symbol, then return ('', false)
     return ('', False)
                 
@@ -71,7 +71,7 @@ def checkSatisfied(clauses, assignment):
         else:
             # ['not', 'X']
             if clause[0] == 'not':
-                satisfied = (not assignment[clause[0]]) and satisfied
+                satisfied = (not assignment[clause[1]]) and satisfied
             # ['or', 'x', ...]
             else:
                 orResult = False
@@ -89,7 +89,7 @@ def checkSatisfied(clauses, assignment):
 
 
 def DPLL(clauses, symbols, assignment):
-    if len(assignment) == len(symbols):
+    if 0 == len(symbols):
         if checkSatisfied(clauses, assignment):
             return (True, assignment)
         else:
@@ -102,7 +102,7 @@ def DPLL(clauses, symbols, assignment):
             return DPLL(clauses, symbols, assignment)
         unitSymbol = findUnit(clauses, symbols)
         if unitSymbol[0] != '':
-            symbols.remove[unitSymbol[0]]
+            symbols.remove(unitSymbol[0])
             assignment[unitSymbol[0]] = unitSymbol[1]
             return DPLL(clauses, symbols, assignment)
         first_symbol = symbols[0]
@@ -121,7 +121,7 @@ def getClauses(sentence):
     if sentence[0] == 'and':
         clauses = sentence[1:]
     else:
-        clauses = sentence
+        clauses = [sentence]
     return clauses
 
 def getSymbols(sentence):
@@ -141,6 +141,17 @@ def getSymbols(sentence):
     return result
 
 
+def printResult(result):
+    if result[0] == False:
+        print '["false"]'
+    else:
+        print '["true"',
+        assignment = result[1]
+        for var in assignment:
+            print ', "{v}={a}"'.format(v=var, a=assignment[var]),
+        print ']'
+    
+
 if __name__ == '__main__':
     input_file_name = 'CNF_sentences.txt'
     output_file_name = ''
@@ -155,5 +166,6 @@ if __name__ == '__main__':
         print 'symbols:          {s}.'.format(s=symbols)
         print 'clauses:          {s}.'.format(s=clauses)
         assignment = {}
-        #DPLL(clauses, symbols, assignment)
+        result = DPLL(clauses, symbols, assignment)
+        printResult(result)
         sentencesNum -= 1

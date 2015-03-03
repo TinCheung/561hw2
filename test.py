@@ -18,9 +18,10 @@ print b
 print a
 
 dic = {'a': True}
-print dic
+print dic.keys()
 print len(dic)
 l = 'a'
 print dic[l] and (not False)
 c = ('a', True)
 print c[0]
+print 'a' . 'b'
